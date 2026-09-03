@@ -119,9 +119,13 @@ class _CatchCowScreenState extends State<CatchCowScreen> {
           else
             Container(
               color: Colors.brown.shade200,
-              alignment: Alignment.center,
+              alignment: Alignment.topCenter,
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                // Sits above the cow photo overlay (below) instead of
+                // directly behind it — they'd otherwise both be centered
+                // and the cow would paint over this since it's later in
+                // the Stack.
+                padding: const EdgeInsets.only(top: 140, left: 24, right: 24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
