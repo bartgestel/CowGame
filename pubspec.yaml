@@ -1,0 +1,38 @@
+name: cow_game
+description: "MOO-VE IT! — a Dutch farmer exergame about the nitrogen crisis."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.1
+  sensors_plus: ^6.0.1
+  camera: ^0.11.0+2
+  provider: ^6.1.2
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+  image_path: "assets/icon/logo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
