@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,8 +26,6 @@ class CatchCowScreen extends StatefulWidget {
 
 class _CatchCowScreenState extends State<CatchCowScreen> {
   CameraController? _cameraController;
-  String? _cameraError;
-  bool _cameraLoading = false;
   late final String _cowName = _cowNames[Random().nextInt(_cowNames.length)];
   Timer? _timer;
   int _secondsLeft = _countdown.inSeconds;
@@ -37,12 +34,7 @@ class _CatchCowScreenState extends State<CatchCowScreen> {
   @override
   void initState() {
     super.initState();
-    // ponytail: mobile browsers (esp. Safari) require getUserMedia to be
-    // triggered directly by a user tap, not by code running after
-    // navigation completes — so on web we wait for the "Enable camera"
-    // button instead of auto-requesting here. Native apps don't have that
-    // restriction, so they can request immediately.
-    if (!kIsWeb) _initCamera();
+    _initCamera();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
@@ -53,28 +45,17 @@ class _CatchCowScreenState extends State<CatchCowScreen> {
   }
 
   Future<void> _initCamera() async {
-    setState(() {
-      _cameraLoading = true;
-      _cameraError = null;
-    });
     try {
       final cameras = await availableCameras();
-      if (cameras.isEmpty) throw Exception('No camera found on this device');
+      if (cameras.isEmpty) return;
       final controller = CameraController(cameras.first, ResolutionPreset.medium);
       await controller.initialize();
       if (!mounted) return;
-      setState(() {
-        _cameraController = controller;
-        _cameraLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      // ponytail: surfaced on screen rather than swallowed, so a real device
-      // shows *why* the camera didn't start instead of just a blank fallback.
-      setState(() {
-        _cameraError = e.toString();
-        _cameraLoading = false;
-      });
+      setState(() => _cameraController = controller);
+    } catch (_) {
+      // ponytail: camera unavailable/denied/hosting-specific quirk (known
+      // issue on the deployed build, see git history) — falls back to the
+      // plain background below rather than blocking the game.
     }
   }
 
@@ -117,33 +98,9 @@ class _CatchCowScreenState extends State<CatchCowScreen> {
           if (camera != null && camera.value.isInitialized)
             CameraPreview(camera)
           else
-            Container(
-              color: Colors.brown.shade200,
-              alignment: Alignment.topCenter,
-              child: Padding(
-                // Sits above the cow photo overlay (below) instead of
-                // directly behind it — they'd otherwise both be centered
-                // and the cow would paint over this since it's later in
-                // the Stack.
-                padding: const EdgeInsets.only(top: 140, left: 24, right: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (kIsWeb && !_cameraLoading)
-                      ElevatedButton(
-                        onPressed: _initCamera,
-                        child: Text(_cameraError == null ? 'Enable camera' : 'Try again'),
-                      ),
-                    if (_cameraLoading) const CircularProgressIndicator(),
-                    if (_cameraError != null) ...[
-                      const SizedBox(height: 12),
-                      Text('Camera unavailable: $_cameraError',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.black87, fontSize: 12)),
-                    ],
-                  ],
-                ),
-              ),
+            const Image(
+              image: AssetImage('assets/images/fallback_field.jpeg'),
+              fit: BoxFit.cover,
             ),
           Center(
             child: Column(
